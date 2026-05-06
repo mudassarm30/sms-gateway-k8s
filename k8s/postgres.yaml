@@ -1,21 +1,23 @@
 apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: postgres-pvc
-  namespace: sms-gateway
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 5Gi
----
-apiVersion: apps/v1
-kind: Deployment
+kind: Service
 metadata:
   name: postgres
   namespace: sms-gateway
 spec:
+  selector:
+    app: postgres
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: sms-gateway
+spec:
+  serviceName: "postgres"
   replicas: 1
   selector:
     matchLabels:
@@ -40,20 +42,11 @@ spec:
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
-      volumes:
-        - name: postgres-data
-          persistentVolumeClaim:
-            claimName: postgres-pvc
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: postgres
-  namespace: sms-gateway
-spec:
-  selector:
-    app: postgres
-  ports:
-    - protocol: TCP
-      port: 5432
-      targetPort: 5432
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 5Gi
