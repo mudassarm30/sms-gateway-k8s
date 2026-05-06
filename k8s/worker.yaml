@@ -22,9 +22,15 @@ spec:
             - name: SPRING_DATASOURCE_URL
               value: jdbc:postgresql://postgres:5432/smsgatewaydb
             - name: SPRING_DATASOURCE_USERNAME
-              value: smsgateway_user
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: POSTGRES_USER
             - name: SPRING_DATASOURCE_PASSWORD
-              value: jangli_na_bacha
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: POSTGRES_PASSWORD
             - name: WORKER_ID
               valueFrom:
                 fieldRef:
