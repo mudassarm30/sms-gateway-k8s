@@ -26,5 +26,8 @@ To use the CI/CD pipeline, you must configure the following Secrets in your GitH
 - `SSH_HOST`: The IP address of the target Ubuntu server running Kubernetes.
 - `SSH_USER`: The SSH username for the Ubuntu server.
 - `SSH_PRIVATE_KEY`: The SSH private key to access the Ubuntu server.
+- `POSTGRES_USER`: The username for the PostgreSQL database (e.g., `smsgateway_user`).
+- `POSTGRES_PASSWORD`: The secure password for the PostgreSQL database.
+- `POSTGRES_DB`: The name of the PostgreSQL database (e.g., `smsgatewaydb`).
 
 *Note: You must also update the repository URLs in `.github/workflows/deploy.yml` and `k8s/*.yaml` files to match your actual GitHub and Docker Hub organization/username.*

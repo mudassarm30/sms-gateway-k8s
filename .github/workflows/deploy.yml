@@ -83,10 +83,15 @@ jobs:
 
       - name: Deploy to Ubuntu K8s Cluster
         uses: appleboy/ssh-action@v0.1.10
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB
           script: |
             # We copy the k8s folder to the remote server or just run kubectl if remote is configured.
             # Assuming kubectl is configured on the target machine:
@@ -98,6 +103,15 @@ jobs:
             # A common approach is pulling the latest yaml directly:
             git clone https://github.com/your-org-or-user/sms-gateway-k8s.git temp-repo || (cd temp-repo && git pull)
             kubectl apply -f temp-repo/k8s/namespace.yaml
+            
+            # Dynamically create the database credentials Secret from GitHub Secrets
+            kubectl create secret generic db-credentials \
+              --from-literal=POSTGRES_USER=$POSTGRES_USER \
+              --from-literal=POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+              --from-literal=POSTGRES_DB=$POSTGRES_DB \
+              -n sms-gateway \
+              --dry-run=client -o yaml | kubectl apply -f -
+              
             kubectl apply -f temp-repo/k8s/
             kubectl rollout restart deployment sms-gateway-backend -n sms-gateway
             kubectl rollout restart deployment sms-gateway-worker -n sms-gateway
