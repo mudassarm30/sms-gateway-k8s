@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: your-dockerhub-user/sms-gateway-frontend:latest
+          image: mudassarm30/sms-gateway-frontend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 80

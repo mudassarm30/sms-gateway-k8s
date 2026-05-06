@@ -19,21 +19,21 @@ jobs:
       - name: Checkout backend repo
         uses: actions/checkout@v3
         with:
-          repository: your-org-or-user/sms-gateway-backend
+          repository: avais/sms-gateway-backend
           path: sms-gateway-backend
           token: ${{ secrets.GITHUB_TOKEN }} # Adjust if private
 
       - name: Checkout worker repo
         uses: actions/checkout@v3
         with:
-          repository: your-org-or-user/sms-gateway-worker
+          repository: mudassarm30/sms-gateway-worker
           path: sms-gateway-worker
           token: ${{ secrets.GITHUB_TOKEN }} # Adjust if private
 
       - name: Checkout frontend repo
         uses: actions/checkout@v3
         with:
-          repository: your-org-or-user/sms-gateway-frontend
+          repository: avais/sms-gateway-frontend
           path: sms-gateway-frontend
           token: ${{ secrets.GITHUB_TOKEN }} # Adjust if private
 
