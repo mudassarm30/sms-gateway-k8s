@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sms-gateway-worker
+  namespace: sms-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sms-gateway-worker
+  template:
+    metadata:
+      labels:
+        app: sms-gateway-worker
+    spec:
+      containers:
+        - name: worker
+          image: your-dockerhub-user/sms-gateway-worker:latest
+          imagePullPolicy: Always
+          command: ["java", "-jar", "app.jar", "-mock", "Ufone,Telenor"]
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres:5432/smsgatewaydb
+            - name: SPRING_DATASOURCE_USERNAME
+              value: smsgateway_user
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: jangli_na_bacha
+            - name: WORKER_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name

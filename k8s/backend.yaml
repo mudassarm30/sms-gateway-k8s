@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sms-gateway-backend
+  namespace: sms-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sms-gateway-backend
+  template:
+    metadata:
+      labels:
+        app: sms-gateway-backend
+    spec:
+      containers:
+        - name: backend
+          image: your-dockerhub-user/sms-gateway-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8075
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres:5432/smsgatewaydb
+            - name: SPRING_DATASOURCE_USERNAME
+              value: smsgateway_user
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: jangli_na_bacha
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: sms-gateway
+spec:
+  selector:
+    app: sms-gateway-backend
+  ports:
+    - protocol: TCP
+      port: 8075
+      targetPort: 8075

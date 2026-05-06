@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sms-gateway-frontend
+  namespace: sms-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sms-gateway-frontend
+  template:
+    metadata:
+      labels:
+        app: sms-gateway-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: your-dockerhub-user/sms-gateway-frontend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: sms-gateway
+spec:
+  selector:
+    app: sms-gateway-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
