@@ -14,28 +14,27 @@ jobs:
       - name: Checkout deployment repo
         uses: actions/checkout@v3
 
-      # Check out the other repositories
-      # Note: Adjust the repository URLs and paths according to your actual GitHub setup
+      # Check out the other repositories using GH_PAT for private access
       - name: Checkout backend repo
         uses: actions/checkout@v3
         with:
           repository: avais/sms-gateway-backend
           path: sms-gateway-backend
-          token: ${{ secrets.GITHUB_TOKEN }} # Adjust if private
+          token: ${{ secrets.GH_PAT }}
 
       - name: Checkout worker repo
         uses: actions/checkout@v3
         with:
           repository: mudassarm30/sms-gateway-worker
           path: sms-gateway-worker
-          token: ${{ secrets.GITHUB_TOKEN }} # Adjust if private
+          token: ${{ secrets.GH_PAT }}
 
       - name: Checkout frontend repo
         uses: actions/checkout@v3
         with:
           repository: avais/sms-gateway-frontend
           path: sms-gateway-frontend
-          token: ${{ secrets.GITHUB_TOKEN }} # Adjust if private
+          token: ${{ secrets.GH_PAT }}
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -58,7 +57,6 @@ jobs:
       # Build Worker
       - name: Build and push Worker
         uses: docker/build-push-action@v4
-          # Note: The worker Dockerfile assumes it builds itself with Maven
         with:
           context: ./sms-gateway-worker
           file: ./sms-gateway-worker/Dockerfile
@@ -87,24 +85,31 @@ jobs:
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          GH_PAT: ${{ secrets.GH_PAT }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB
+          envs: POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,GH_PAT
           script: |
-            # We copy the k8s folder to the remote server or just run kubectl if remote is configured.
-            # Assuming kubectl is configured on the target machine:
-            mkdir -p ~/deployments/sms-gateway-k8s
-            cd ~/deployments/sms-gateway-k8s
-            # For simplicity, we can clone this repo directly on the remote machine
-            # or apply remote files. Since this is SSH, let's write a command to apply directly
-            # from the repository URL, or we can use scp. 
-            # A common approach is pulling the latest yaml directly:
-            git clone https://github.com/your-org-or-user/sms-gateway-k8s.git temp-repo || (cd temp-repo && git pull)
-            kubectl apply -f temp-repo/k8s/namespace.yaml
+            mkdir -p ~/deployments
+            cd ~/deployments
             
-            # Dynamically create the database credentials Secret from GitHub Secrets
+            # Clone or update the deployment repository using PAT for access
+            if [ ! -d "sms-gateway-k8s" ]; then
+              git clone https://x-access-token:${GH_PAT}@github.com/mudassarm30/sms-gateway-k8s.git
+            else
+              cd sms-gateway-k8s
+              git pull https://x-access-token:${GH_PAT}@github.com/mudassarm30/sms-gateway-k8s.git
+              cd ..
+            fi
+            
+            cd sms-gateway-k8s
+            
+            # Apply Namespace
+            kubectl apply -f k8s/namespace.yaml
+            
+            # Dynamically create/update the database credentials Secret
             kubectl create secret generic db-credentials \
               --from-literal=POSTGRES_USER=$POSTGRES_USER \
               --from-literal=POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
@@ -112,7 +117,10 @@ jobs:
               -n sms-gateway \
               --dry-run=client -o yaml | kubectl apply -f -
               
-            kubectl apply -f temp-repo/k8s/
+            # Apply all Kubernetes manifests
+            kubectl apply -f k8s/
+            
+            # Force restart deployments to pull latest images
             kubectl rollout restart deployment sms-gateway-backend -n sms-gateway
             kubectl rollout restart deployment sms-gateway-worker -n sms-gateway
             kubectl rollout restart deployment sms-gateway-frontend -n sms-gateway
