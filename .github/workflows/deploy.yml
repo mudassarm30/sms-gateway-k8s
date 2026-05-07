@@ -106,21 +106,21 @@ jobs:
             
             cd sms-gateway-k8s
             
-            # Apply Namespace
-            kubectl apply -f k8s/namespace.yaml
+            # Apply Namespace (using sudo for K3s permissions)
+            sudo kubectl apply -f k8s/namespace.yaml
             
             # Dynamically create/update the database credentials Secret
-            kubectl create secret generic db-credentials \
+            sudo kubectl create secret generic db-credentials \
               --from-literal=POSTGRES_USER=$POSTGRES_USER \
               --from-literal=POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
               --from-literal=POSTGRES_DB=$POSTGRES_DB \
               -n sms-gateway \
-              --dry-run=client -o yaml | kubectl apply -f -
+              --dry-run=client -o yaml | sudo kubectl apply -f -
               
             # Apply all Kubernetes manifests
-            kubectl apply -f k8s/
+            sudo kubectl apply -f k8s/
             
             # Force restart deployments to pull latest images
-            kubectl rollout restart deployment sms-gateway-backend -n sms-gateway
-            kubectl rollout restart deployment sms-gateway-worker -n sms-gateway
-            kubectl rollout restart deployment sms-gateway-frontend -n sms-gateway
+            sudo kubectl rollout restart deployment sms-gateway-backend -n sms-gateway
+            sudo kubectl rollout restart deployment sms-gateway-worker -n sms-gateway
+            sudo kubectl rollout restart deployment sms-gateway-frontend -n sms-gateway
