@@ -4,7 +4,7 @@ metadata:
   name: sms-gateway-worker
   namespace: sms-gateway
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: sms-gateway-worker
