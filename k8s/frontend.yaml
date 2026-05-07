@@ -26,9 +26,11 @@ metadata:
   name: frontend-service
   namespace: sms-gateway
 spec:
+  type: NodePort
   selector:
     app: sms-gateway-frontend
   ports:
     - protocol: TCP
       port: 80
       targetPort: 80
+      nodePort: 30080
